@@ -1,5 +1,6 @@
 import os
-import os.path as osp
+#import os.path as osp
+from pathlib import Path
 import cv2
 import pandas as pd
 import numpy as np
@@ -270,8 +271,9 @@ def adjust_xy(idx):
 
 
 def add_last_dart(annot, data_path, folder):
-    csv_path = osp.join(data_path, 'annotations', folder + '.csv')
-    if osp.isfile(csv_path):
+    csv_path = Path(data_path) / 'annotations' / (folder + '.csv')
+
+    if Path(csv_path).is_file():
         dart_labels = []
         csv = pd.read_csv(csv_path)
         for idx in csv.index.values:
@@ -314,10 +316,12 @@ def get_bounding_box(img_path, scale=0.2):
 
 def main(cfg, folder, scale, draw_circles, dart_score=True):
     global xy, img_copy
-    img_dir = osp.join("../", cfg.data.path, 'images', folder)
+    img_dir = Path("./") / cfg.data.path / folder
+
     imgs = sorted(os.listdir(img_dir))
-    annot_path = osp.join("../", cfg.data.path, 'annotations', folder + '.pkl')
-    if osp.isfile(annot_path):
+    annot_path = Path("./") / cfg.data.path / 'annotations' / (folder + '.pkl')
+
+    if Path(annot_path).is_file():
         annot = pd.read_pickle(annot_path)
     else:
         annot = pd.DataFrame(columns=['img_name', 'bbox', 'xy'])
@@ -338,7 +342,8 @@ def main(cfg, folder, scale, draw_circles, dart_score=True):
         print('Annotating {}'.format(a['img_name']))
         if a['bbox'] is None:
             if i == 0:
-                bbox = get_bounding_box(osp.join(img_dir, a['img_name']))
+                file_path = Path(img_dir) / a['img_name']
+                bbox = get_bounding_box(str(file_path))
             if i > 0:
                 last_a = annot.iloc[i-1,:]
                 if last_a['xy'] is not None:
@@ -350,7 +355,8 @@ def main(cfg, folder, scale, draw_circles, dart_score=True):
         else:
             bbox, xy = a['bbox'], a['xy']
 
-        crop, _ = crop_board(osp.join(img_dir, a['img_name']), bbox=bbox)
+        file_path = str(Path(img_dir) / a['img_name'])
+        crop, _ = crop_board(file_path, bbox=bbox)
         crop = cv2.resize(crop, (int(crop.shape[1] * scale), int(crop.shape[0] * scale)))
         cv2.putText(crop, '{}/{} {}'.format(i+1, len(annot), a['img_name']), (0, 12), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
         img_copy = crop.copy()
@@ -369,7 +375,8 @@ def main(cfg, folder, scale, draw_circles, dart_score=True):
 
             if key == ord('b'):  # draw new bounding box
                 idx = annot[(annot['img_name'] == a['img_name'])].index.values[0]
-                annot.at[idx, 'bbox'] = get_bounding_box(osp.join(img_dir, a['img_name']), scale)
+                file_path = Path(img_dir) / a['img_name']
+                annot.at[idx, 'bbox'] = get_bounding_box(file_path, scale)
                 break
 
             if key == ord('.'):
@@ -400,7 +407,10 @@ def main(cfg, folder, scale, draw_circles, dart_score=True):
                     idx = annot[(annot['img_name'] == a['img_name'])].index.values[0]
                     annot = annot.drop([idx])
                     annot.to_pickle(annot_path)
-                    os.remove(osp.join(img_dir, a['img_name']))
+                    #file_path = osp.join(img_dir, a['img_name'])
+                    #replace using Path
+                    file_path = Path(img_dir) / a['img_name']
+                    os.remove(file_path)
                     print('Deleted image {}'.format(a['img_name']))
                     break
                 else:
@@ -422,15 +432,15 @@ def main(cfg, folder, scale, draw_circles, dart_score=True):
 
 
 if __name__ == '__main__':
-    import sys
-    sys.path.append('../../')
+    #import sys
+    #sys.path.append('../../')
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--img-folder', default='d2_04_05_2020')
+    parser.add_argument('-f', '--img-folder', default='./cropped_images/416/utrecht_04_08_2024')
     parser.add_argument('-s', '--scale', type=float, default=0.5)
     parser.add_argument('-d', '--draw-circles', action='store_true')
     args = parser.parse_args()
 
     cfg = CN(new_allowed=True)
-    cfg.merge_from_file('../configs/deepdarts_utrecht.yaml')
+    cfg.merge_from_file('./configs/deepdarts_utrecht.yaml')
 
     main(cfg, args.img_folder, args.scale, args.draw_circles)

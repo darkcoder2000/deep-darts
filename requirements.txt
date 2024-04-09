@@ -4,3 +4,4 @@ yacs
 pandas
 yolov4==2.0.3
 matplotlib
+protobuf==3.20
