@@ -376,7 +376,7 @@ def main(cfg, folder, scale, draw_circles, dart_score=True):
             if key == ord('b'):  # draw new bounding box
                 idx = annot[(annot['img_name'] == a['img_name'])].index.values[0]
                 file_path = Path(img_dir) / a['img_name']
-                annot.at[idx, 'bbox'] = get_bounding_box(file_path, scale)
+                annot.at[idx, 'bbox'] = get_bounding_box(str(file_path), scale)
                 break
 
             if key == ord('.'):
@@ -435,12 +435,12 @@ if __name__ == '__main__':
     #import sys
     #sys.path.append('../../')
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--img-folder', default='./cropped_images/416/utrecht_04_08_2024')
+    parser.add_argument('-f', '--img-folder', default='./images/myimages4')
     parser.add_argument('-s', '--scale', type=float, default=0.5)
     parser.add_argument('-d', '--draw-circles', action='store_true')
     args = parser.parse_args()
 
     cfg = CN(new_allowed=True)
-    cfg.merge_from_file('./configs/deepdarts_utrecht.yaml')
+    cfg.merge_from_file('./configs/deepdarts_myimages.yaml')
 
     main(cfg, args.img_folder, args.scale, args.draw_circles)

@@ -10,7 +10,12 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["-c", "deepdarts_utrecht","-s","test","-w"]
+            //"args": ["-c", "deepdarts_utrecht","-s","test","-w"]  // for predict.py
+            //"args": ["-c", "deepdarts_myimages","-s","all","-w"]  // for predict.py
+            //"args": ["--cfg", "deepdarts_utrecht"]  // for train.py
+            //"args": ["--cfg", "deepdarts_myimages"]  // for train.py
+            //"args": ["-lp", "dataset/images/myimages/labels.pkl", "-ip", "dataset/images","-s","800"] //for crop_images.py
+            "args": ["-f","./images/myimages4","-s", "0.4"]
         }
     ]
 }

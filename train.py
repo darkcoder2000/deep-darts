@@ -1,5 +1,6 @@
 import os
-import os.path as osp
+#import os.path as osp
+from pathlib import Path
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 from yacs.config import CfgNode as CN
@@ -61,8 +62,8 @@ def build_model(cfg, classes='classes'):
 
 
 def train(cfg, strategy):
-    img_path = osp.join(cfg.data.path, 'cropped_images', str(cfg.model.input_size))
-    assert osp.exists(img_path), 'Could not find cropped images at {}'.format(img_path)
+    img_path = Path(cfg.data.path) / 'cropped_images' / str(cfg.model.input_size)
+    assert img_path.exists(), 'Could not find cropped images at {}'.format(img_path)
 
     tf.random.set_seed(cfg.train.seed)
     np.random.seed(cfg.train.seed)
@@ -120,7 +121,7 @@ def train(cfg, strategy):
             verbose=cfg.train.loss_verbose)
         yolo.model.compile(optimizer=optimizer, loss=loss)
 
-    val_steps = {'d1': 20, 'd2': 8, 'utrecht': 8}
+    val_steps = {'d1': 20, 'd2': 8, 'utrecht': 8, 'myimages': 8}
 
     hist = yolo.model.fit(
         train_ds,
@@ -145,9 +146,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     cfg = CN(new_allowed=True)
-    cfg.merge_from_file(osp.join('configs', args.cfg + '.yaml'))
+    cfg.merge_from_file(str(Path('configs') / (args.cfg + '.yaml')))
     cfg.model.name = args.cfg
 
     tpu, strategy = detect_hardware(tpu_name=None)
     yolo = train(cfg, strategy)
-    predict(yolo, cfg, dataset=cfg.data.dataset, split='train')
+    predict(yolo, cfg, 
+            labels_path=cfg.data.labels_path,
+            dataset=cfg.data.dataset, 
+            split='train')

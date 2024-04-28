@@ -3,7 +3,7 @@ from yacs.config import CfgNode as CN
 import os.path as osp
 import os
 from pathlib import Path
-from dataloader import get_splits
+from dataloader import get_splits, get_all
 import cv2
 import numpy as np
 from time import time
@@ -77,7 +77,7 @@ def predict(
     if write:
         os.makedirs(write_dir, exist_ok=True)
 
-    data = get_splits(labels_path, dataset, split)
+    data = get_all(labels_path, dataset)
     img_prefix = Path(cfg.data.path) / 'cropped_images' / str(cfg.model.input_size)
     img_paths = [img_prefix / folder / name for (folder, name) in zip(data.img_folder, data.img_name)]
 
@@ -144,7 +144,7 @@ if __name__ == '__main__':
     from train import build_model
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--cfg', default='deepdarts_utrecht')
-    parser.add_argument('-s', '--split', default='test')
+    parser.add_argument('-s', '--split', default=None)
     parser.add_argument('-w', '--write', action='store_true')
     parser.add_argument('-f', '--fail-cases', action='store_true')
     args = parser.parse_args()

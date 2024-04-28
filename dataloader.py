@@ -1,6 +1,7 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-import os.path as osp
+#import os.path as osp
+from pathlib import Path
 import tensorflow as tf
 import pandas as pd
 import numpy as np
@@ -21,11 +22,20 @@ datasets = {
     "utrecht": {
         "val": ['utrecht_01_04_2023'],
         "test": ['utrecht_01_07_2023_2']
-    }
+    },
+    "myimages": {
+        "val": ['myimages_val'],
+        "test": ['myimages_test']
+    }    
 }
 
+def get_all(path, dataset):
+    df = pd.read_pickle(path)
+    df = df[df.img_folder.str.contains(dataset)]
+    return df
 
-def get_splits(path='./dataset/labels.pkl', dataset='d1', split='train'):
+
+def get_splits(path, dataset, split='train'):
 
     assert dataset in datasets.keys(), f"dataset must be one of {datasets.keys()}"
     assert split in [None, 'train', 'val', 'test'], "split must be in [None, 'train', 'val', 'test']"
@@ -256,8 +266,8 @@ def load_tfds(
         debug=False):
 
     data = get_splits(cfg.data.labels_path, cfg.data.dataset, split)
-    img_path = osp.join(cfg.data.path, 'cropped_images', str(cfg.model.input_size))
-    img_paths = [osp.join(img_path, folder, name) for (folder, name) in zip(data.img_folder, data.img_name)]
+    img_path = Path(cfg.data.path) / 'cropped_images' / str(cfg.model.input_size)
+    img_paths = [str(Path(img_path) / folder / name) for (folder, name) in zip(data.img_folder, data.img_name)]
 
     xys = np.zeros((len(data), 7, 3))  # third column for visibility
     data.xy = data.xy.apply(np.array)
@@ -284,7 +294,7 @@ def load_tfds(
                     [path, xy], dtypes),
                 num_parallel_calls=AUTO)
 
-    input_size = int(img_path.split('/')[-1])
+    input_size = int(img_path.parts[-1])
 
     if not return_xy:
         if cfg.model.tiny:
